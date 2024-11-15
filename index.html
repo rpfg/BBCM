@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>BBC Manila - Unofficial Race Results</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      background-color: #f9f9f9;
+    }
+    header {
+      text-align: center;
+      background-color: #333;
+      color: #fff;
+      padding: 10px 0;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 2em;
+    }
+    header h2 {
+      margin: 0;
+      font-size: 1.2em;
+      font-weight: normal;
+    }
+    .categories {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      background-color: #444;
+    }
+    .categories button {
+      margin: 5px;
+      padding: 10px 15px;
+      border: none;
+      color: white;
+      background-color: #666;
+      cursor: pointer;
+      transition: background-color 0.3s, color 0.3s;
+    }
+    .categories button.active {
+      background-color: #333;
+      color: #39FF14; /* Neon green color */
+    }
+    .categories button:hover {
+      background-color: #555;
+    }
+    .search-bar {
+      margin: 20px;
+      text-align: center;
+    }
+    .search-bar input {
+      padding: 10px;
+      width: 300px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    .results {
+      margin: 20px;
+      text-align: center;
+    }
+    table {
+      width: 100%;
+      max-width: 1000px;
+      margin: 20px auto;
+      border-collapse: collapse;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+    table th, table td {
+      border: 1px solid #ddd;
+      padding: 8px;
+    }
+    table th {
+      background-color: #f4f4f4;
+      text-align: left;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>BBC Manila</h1>
+    <h2>Unofficial Race Results</h2>
+  </header>
+  <div class="categories">
+    <!-- Categories Buttons -->
+  </div>
+  <div class="search-bar">
+    <input type="text" id="searchInput" placeholder="Search by Player Name or Pigeon ID">
+  </div>
+  <div class="results">
+    <table id="resultsTable">
+      <thead></thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const apiKey = "AIzaSyDnQPBVIY-hChWThux9R8WknqvuDHsDFog";
+    const sheetId = "1B_u9HjCyqyjxTyI2nHWHflcuN3EFnvU7mPI2GNYitMA";
+    const ranges = {
+  "Fun Race 2": "FR2!A2:I13",
+  "Fun Race 3": "FR3!A2:I13",
+  "Fun Race 4": "FR4!A2:I13",
+  "Young Bird": "YoungBird!A2:I13",
+  "Old Bird": "OldBird!A2:I13",
+  "OC Knock Out": "OCKO!A2:I13",
+  "2H Knock Out": "KO200!A2:I13",  // Updated
+  "5H Knock Out": "KO500!A2:I13",  // Updated
+  "1K Knock Out": "KO1K!A2:I13",
+  "2K Knock Out": "KO2K!A2:I13",
+  "5K Knock Out": "KO5K!A2:I13",
+  "10K Knock Out": "KO10K!A2:I13",
+  "5 Laps Re-Entry": "5Laps!A2:I13",
+  "4 Laps Re-Entry": "4Laps!A2:I13",
+  "Patibayan": "Patibayan!A2:I13"  // Added "Patibayan"
+    };
+
+    const categoriesDiv = document.querySelector('.categories');
+    const searchInput = document.getElementById('searchInput');
+    const resultsTable = document.getElementById('resultsTable');
+    let currentCategory = null;
+
+    // Define headers for all categories
+    const tableHeaders = [
+      "Rank", "Player Name", "Pigeon ID", "Lap 1", "Lap 2", "Lap 3", "Lap 4", "Lap 5", "Lap 6", "Total Speed"
+    ];
+
+    // Dynamically create category buttons
+    Object.keys(ranges).forEach(category => {
+      const button = document.createElement('button');
+      button.textContent = category;
+      button.addEventListener('click', () => loadCategory(category, button));
+      categoriesDiv.appendChild(button);
+    });
+
+    // Load data for selected category
+    function loadCategory(category, button) {
+      if (currentCategory) currentCategory.classList.remove('active');
+      button.classList.add('active');
+      currentCategory = button;
+
+      fetch(`https://sheets.googleapis.com/v4/spreadsheets/${sheetId}/values/${ranges[category]}?key=${apiKey}`)
+        .then(response => response.json())
+        .then(data => {
+          if (data.values) {
+            displayData(data.values, category);
+          }
+        })
+        .catch(error => console.error('Error fetching data:', error));
+    }
+
+    // Display data in table with headers
+    function displayData(data, category) {
+      const [headers, ...rows] = data;
+
+      // Set table headers
+      resultsTable.querySelector('thead').innerHTML = `<tr>${tableHeaders.map(h => `<th>${h}</th>`).join('')}</tr>`;
+
+      // Set table rows
+      resultsTable.querySelector('tbody').innerHTML = rows.map(row => `<tr>${row.map(cell => `<td>${cell}</td>`).join('')}</tr>`).join('');
+    }
+
+    // Search functionality
+    searchInput.addEventListener('input', () => {
+      const filter = searchInput.value.toLowerCase();
+      const rows = resultsTable.querySelectorAll('tbody tr');
+      rows.forEach(row => {
+        const text = row.textContent.toLowerCase();
+        row.style.display = text.includes(filter) ? '' : 'none';
+      });
+    });
+  </script>
+</body>
+</html>
